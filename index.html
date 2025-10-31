@@ -45,7 +45,7 @@
         position: relative;
         flex: 1 1 auto;
         overflow: hidden;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.96));
+        background: var(--stage-background);
       }
 
       .flake {
@@ -89,6 +89,17 @@
       <div id="snow-stage" class="snow-stage" aria-hidden="true"></div>
     </div>
 
+    <script>
+      window.SNOWFALL_ASSETS = [
+        "ChatGPT Image Oct 31, 2025 at 07_42_39 PM.png",
+        "ChatGPT Image Oct 31, 2025 at 07_42_50 PM.png",
+        "ChatGPT Image Oct 31, 2025 at 07_42_53 PM.png",
+        "ChatGPT Image Oct 31, 2025 at 07_42_55 PM.png",
+        "ChatGPT Image Oct 31, 2025 at 07_42_59 PM.png",
+        "ChatGPT Image Oct 31, 2025 at 07_43_01 PM.png",
+        "ChatGPT Image Oct 31, 2025 at 07_43_12 PM.png",
+      ];
+    </script>
     <script type="module" src="snowfall.js"></script>
   </body>
 </html>
