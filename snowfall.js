@@ -6,7 +6,10 @@ const FLAKE_SIZE = parseFloat(
   getComputedStyle(document.documentElement).getPropertyValue("--flake-size")
 );
 
-const stage = document.getElementById("snow-stage");
+let stage = null;
+let hasInitialized = false;
+let initInProgress = false;
+
 const state = {
   images: [],
   activeFlakes: [],
@@ -55,6 +58,9 @@ function computeEnvelope(y, size, height) {
 }
 
 function recalcAreas() {
+  if (!stage) {
+    return;
+  }
   const rect = stage.getBoundingClientRect();
   const width = rect.width;
   const height = rect.height;
@@ -304,6 +310,9 @@ function spawnFlake({ force = false, initialOffset = 0 } = {}) {
   if (!force && state.activeFlakes.length >= MAX_ACTIVE) {
     return false;
   }
+  if (!stage) {
+    return false;
+  }
   const image = pickImage();
   if (!image) {
     return false;
@@ -329,7 +338,7 @@ function spawnFlake({ force = false, initialOffset = 0 } = {}) {
 function recycleFlake(flake) {
   flake.image.inUse = false;
   state.areaUsage[flake.area.name] = Math.max(0, (state.areaUsage[flake.area.name] ?? 1) - 1);
-  if (flake.element.parentNode === stage) {
+  if (stage && flake.element.parentNode === stage) {
     stage.removeChild(flake.element);
   }
 }
@@ -351,6 +360,9 @@ function ensurePopulation(timestamp) {
 }
 
 function animationLoop(timestamp) {
+  if (!stage) {
+    return;
+  }
   if (!state.lastTime) {
     state.lastTime = timestamp;
     state.nextSpawn = timestamp + randomRange(400, 840, state.seededRandom);
@@ -374,7 +386,23 @@ function animationLoop(timestamp) {
 }
 
 async function init() {
+  if (hasInitialized || initInProgress) {
+    return;
+  }
+  stage = document.getElementById("snow-stage");
+  if (!stage) {
+    console.warn("Не удалось инициализировать снегопад: элемент со сценой не найден.");
+    return;
+  }
+  initInProgress = true;
   try {
+    state.activeFlakes.length = 0;
+    state.areaUsage = Object.create(null);
+    state.lastTime = null;
+    state.nextSpawn = 0;
+    if (stage) {
+      stage.innerHTML = "";
+    }
     recalcAreas();
     state.images = await preloadImages();
     if (state.images.length < MIN_ACTIVE) {
@@ -390,9 +418,14 @@ async function init() {
       });
     }
     requestAnimationFrame(animationLoop);
+    hasInitialized = true;
   } catch (error) {
-    stage.innerHTML = `<div style="padding: 24px; font-size: 16px; line-height: 1.5; color: #374151;">${error.message}</div>`;
+    if (stage) {
+      stage.innerHTML = `<div style="padding: 24px; font-size: 16px; line-height: 1.5; color: #374151;">${error.message}</div>`;
+    }
     console.error(error);
+  } finally {
+    initInProgress = false;
   }
 }
 
@@ -400,5 +433,19 @@ window.addEventListener("resize", () => {
   recalcAreas();
 });
 
-init();
+function bootstrapSnowfall() {
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      () => {
+        init();
+      },
+      { once: true }
+    );
+  } else {
+    init();
+  }
+}
+
+bootstrapSnowfall();
 
