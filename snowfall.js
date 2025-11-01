@@ -98,11 +98,13 @@ class Flake {
     this.baseX = baseX;
     this.speed = speed;
     this.size = FLAKE_SIZE;
-    this.y = -this.size - (initialOffset || 0);
     this.seed = seed;
     this.noiseClock = randomRange(0, 1000, state.seededRandom);
 
     const rand = createSeededRandom(seed);
+    const entryLift = randomRange(this.size * 0.2, this.size * 0.6, rand);
+    const offset = Math.max(0, initialOffset || 0);
+    this.y = -entryLift - offset;
     this.horizontalNoise = createNoise(rand);
     this.driftNoise = createNoise(rand);
     this.verticalNoise = createNoise(rand);
@@ -326,8 +328,9 @@ function spawnFlake({ force = false, initialOffset = 0 } = {}) {
     area.max - FLAKE_SIZE / 2
   );
   const stageHeight = stage.getBoundingClientRect().height;
+  const normalizedOffset = Math.min(Math.max(0, initialOffset || 0), stageHeight * 0.18);
   const speed = randomRange(stageHeight / 14, stageHeight / 9, state.seededRandom);
-  const flake = new Flake({ image, area, baseX, speed, seed, initialOffset });
+  const flake = new Flake({ image, area, baseX, speed, seed, initialOffset: normalizedOffset });
   image.inUse = true;
   state.activeFlakes.push(flake);
   state.areaUsage[area.name] = (state.areaUsage[area.name] ?? 0) + 1;
